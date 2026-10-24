@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="A silly 90-second game: teach yoga to goats who roast you. Hold the right pose or get headbutted.">
+<meta name="theme-color" content="#cbbbe8">
+<title>Goat Yoga Instructor</title>
+<style>
+*,*::before,*::after{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sniglet:wght@400;800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: phone column; a sunny studio scene with the instructor on a mat, goat request card above, pose buttons below. Single sage-and-lavender look by choice. */
+:root{
+  --sage:#dfe9d6; --sage-2:#c5d8b8; --lav:#cbbbe8; --plum:#2f2541; --muted:#655a78;
+  --sun:#ffcf5a; --mat:#6fb3a8; --coral:#ef7d6a; --paper:#fbfcf8; --line:rgba(47,37,65,.15); --good:#3b8a5f;
+  --display:"Sniglet", "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
+  --body:"Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{background:var(--sage); color:var(--plum); font-family:var(--body); font-size:16px; line-height:1.45;
+  padding-left:max(16px, env(safe-area-inset-left,0px)); padding-right:max(16px, env(safe-area-inset-right,0px));
+  -webkit-tap-highlight-color:transparent}
+.app{max-width:540px; margin:0 auto; padding-block:16px 32px; display:flex; flex-direction:column; gap:14px; box-sizing:border-box}
+h1,h2,h3{font-family:var(--display); font-weight:800; margin:0; letter-spacing:.01em; text-wrap:balance}
+h1{font-size:2.4rem; line-height:1.02}
+h2{font-size:1.6rem; line-height:1.1}
+p{margin:0}
+.muted{color:var(--muted)}
+.label{font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); font-weight:700}
+.screen{display:flex; flex-direction:column; gap:14px}
+.stack{display:flex; flex-direction:column; gap:10px}
+.card{background:var(--paper); border:3px solid var(--plum); border-radius:20px; padding:14px 16px}
+.hero{display:flex; align-items:center; gap:12px}
+.hero svg{flex:none}
+.rules{display:flex; flex-direction:column; gap:8px; margin:0; padding:0; list-style:none}
+.rules li{display:flex; gap:10px; align-items:baseline}
+.rules b{font-family:var(--display); font-weight:800; font-size:1.15rem; color:var(--coral); min-width:1.2em}
+.feel{display:grid; grid-template-columns:repeat(5,1fr); gap:6px}
+.feel button{appearance:none; border:2px solid var(--line); background:var(--paper); color:var(--plum); border-radius:14px; font:inherit;
+  padding:10px 4px; font-size:.8rem; line-height:1.2; display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer}
+.feel button .n{font-family:var(--display); font-weight:800; font-size:1.35rem}
+.feel button[aria-pressed="true"]{border-color:var(--coral); background:#fde6e1}
+.btn{appearance:none; border:3px solid var(--plum); border-radius:999px; padding:12px 22px; font-family:var(--display); font-weight:800; font-size:1.15rem; cursor:pointer;
+  background:var(--sun); color:var(--plum); box-shadow:0 4px 0 var(--plum)}
+.btn:active{transform:translateY(3px); box-shadow:0 1px 0 var(--plum)}
+.btn.ghost{background:transparent; box-shadow:none; border-width:2px; font-family:var(--body); font-weight:700; font-size:.95rem}
+.btn:disabled{opacity:.4; cursor:default}
+.row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+:focus-visible{outline:3px solid var(--plum); outline-offset:3px}
+
+/* HUD */
+.hud{display:flex; justify-content:space-between; align-items:flex-end; gap:10px; font-variant-numeric:tabular-nums}
+.hud > div{display:flex; flex-direction:column}
+.hud .v{font-family:var(--display); font-weight:800; font-size:1.6rem; line-height:1}
+.hud .r{align-items:flex-end}
+.zen{flex:1; display:flex; flex-direction:column; gap:3px; align-items:center}
+.zenbar{width:100%; max-width:180px; height:12px; border-radius:7px; background:rgba(47,37,65,.15); overflow:hidden; border:2px solid var(--plum)}
+.zenbar i{display:block; height:100%; width:30%; background:linear-gradient(90deg, var(--lav), #9d84d6); transition:width .5s}
+
+/* Request card */
+.req{display:grid; grid-template-columns:auto 1fr; gap:12px; align-items:center; background:var(--paper); border:3px solid var(--plum); border-radius:18px; padding:10px 14px; min-height:74px}
+.req .ic{width:54px; height:62px; display:flex; align-items:center; justify-content:center; background:var(--sage); border-radius:12px}
+.req .ic svg{width:44px; height:52px}
+.req .who{font-size:.78rem; font-weight:700; color:var(--muted)}
+.req .what{font-family:var(--display); font-weight:800; font-size:1.2rem; line-height:1.15}
+.wait{height:6px; border-radius:4px; background:rgba(47,37,65,.12); overflow:hidden; margin-top:6px}
+.wait i{display:block; height:100%; width:100%; background:var(--coral)}
+
+/* Scene */
+.scene{position:relative; height:280px; border-radius:22px; overflow:hidden; border:3px solid var(--plum);
+  background:linear-gradient(#f6f1ff 0 62%, #e6d7b8 62% 100%)}
+.window{position:absolute; left:50%; top:16px; transform:translateX(-50%); width:120px; height:80px; border:4px solid var(--plum); border-radius:10px;
+  background:linear-gradient(#bfe3f2 0 60%, #a6d48f 60%)}
+.window::after{content:""; position:absolute; left:50%; top:0; bottom:0; width:4px; background:var(--plum); transform:translateX(-50%)}
+.plant{position:absolute; bottom:96px; width:26px; height:34px; border-radius:4px 4px 8px 8px; background:var(--coral); border:3px solid var(--plum)}
+.plant::before{content:""; position:absolute; left:50%; bottom:100%; transform:translateX(-50%); width:38px; height:40px; border-radius:50% 50% 40% 40%;
+  background:#5e9e6a; border:3px solid var(--plum)}
+.mat{position:absolute; left:50%; bottom:22px; transform:translateX(-50%); width:160px; height:20px; border-radius:10px; background:var(--mat); border:3px solid var(--plum)}
+.inst{position:absolute; left:50%; bottom:34px; width:112px; height:130px; transform:translateX(-50%); transform-origin:50% 100%; transition:transform .25s}
+.inst svg{width:100%; height:100%; display:block; overflow:visible}
+.inst.bonk{animation:bonk 1.1s ease-out}
+@keyframes bonk{0%{transform:translateX(-50%)}15%{transform:translateX(-30%) rotate(30deg)}35%{transform:translateX(-10%) rotate(85deg) translateY(10px)}75%{transform:translateX(-10%) rotate(85deg) translateY(10px)}100%{transform:translateX(-50%)}}
+.ring{position:absolute; left:50%; bottom:28px; width:150px; height:150px; transform:translateX(-50%); pointer-events:none; opacity:0; transition:opacity .2s}
+.ring.on{opacity:1}
+.ring circle{fill:none; stroke-width:7}
+.goat{position:absolute; width:96px; height:76px; transition:transform .5s}
+.goat .gw{width:100%; height:100%; transform-origin:50% 80%; transition:transform .45s cubic-bezier(.3,1.4,.5,1)}
+.goat svg{width:100%; height:100%; display:block; overflow:visible}
+.goat.idle .gw{animation:bob 1.6s ease-in-out infinite}
+.goat.flipL svg{transform:scaleX(-1)}
+@keyframes bob{50%{transform:translateY(-3px)}}
+.goat.asking::after{content:"!"; position:absolute; left:50%; top:-22px; transform:translateX(-50%); font-family:var(--display); font-weight:800; font-size:1.4rem;
+  color:var(--coral); animation:pulse .8s ease-in-out infinite}
+@keyframes pulse{50%{transform:translateX(-50%) scale(1.3)}}
+.gw.p-tree{transform:rotate(-62deg) translateY(-4px); animation:wobble .5s ease-in-out infinite alternate}
+.gw.p-warrior{transform:skewX(-16deg) scaleX(1.15)}
+.gw.p-down{transform:rotate(22deg)}
+.gw.p-cobra{transform:rotate(-24deg)}
+.gw.p-child{transform:scaleY(.55) translateY(22px)}
+.gw.p-mountain{transform:scaleY(1.15); animation:wobble .4s ease-in-out infinite alternate}
+.gw.p-flip{transform:rotate(180deg) translateY(10px)}
+.gw.p-fall{transform:rotate(90deg) translateY(-10px)}
+.gw.p-wobble{animation:wobble .2s ease-in-out infinite alternate}
+@keyframes wobble{from{rotate:-5deg}to{rotate:5deg}}
+.goat.charge{z-index:5}
+.say{position:absolute; left:50%; bottom:100%; transform:translateX(-50%); background:var(--paper); border:2px solid var(--plum); border-radius:12px; padding:2px 8px;
+  font-family:var(--display); font-weight:800; font-size:.82rem; line-height:1.2; width:max-content; max-width:150px; text-align:center;
+  opacity:0; transition:opacity .15s; pointer-events:none; z-index:6}
+.goat.g0 .say{left:0; transform:none}
+.goat.g1 .say{left:auto; right:0; transform:none}
+.say.show{opacity:1}
+.stars{position:absolute; font-size:1.3rem; color:var(--sun); -webkit-text-stroke:1px var(--plum); pointer-events:none; animation:stars 1s ease-out forwards; z-index:7}
+@keyframes stars{to{transform:translateY(-40px) rotate(180deg); opacity:0}}
+.caption{position:absolute; left:10px; right:10px; top:104px; text-align:center; font-family:var(--display); font-weight:800; font-size:1.2rem;
+  text-shadow:0 2px 0 #fff, 0 -2px 0 #fff, 2px 0 0 #fff, -2px 0 0 #fff; opacity:0; transition:opacity .2s; pointer-events:none; z-index:8}
+.caption.show{opacity:1}
+.overlay{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; text-align:center; padding:20px;
+  background:rgba(251,252,248,.93); z-index:10}
+
+/* Pose buttons */
+.poses{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px}
+.pose{appearance:none; border:3px solid var(--plum); background:var(--paper); color:var(--plum); border-radius:16px; font:inherit; font-weight:700; font-size:.82rem;
+  padding:6px 4px 8px; display:flex; flex-direction:column; align-items:center; gap:2px; cursor:pointer; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; touch-action:none}
+.pose svg{width:40px; height:46px}
+.pose.held{background:var(--sun)}
+.pose.bad{background:#fde6e1}
+.hint{text-align:center; font-size:.85rem}
+
+/* Results */
+.rank{background:var(--lav); border:3px solid var(--plum); border-radius:20px; padding:14px 16px; display:flex; flex-direction:column; gap:4px}
+.stats{display:grid; grid-template-columns:repeat(2,1fr); gap:10px}
+.stats > div{background:var(--paper); border:2px solid var(--line); border-radius:16px; padding:12px 14px; display:flex; flex-direction:column; gap:2px}
+.stats .v{font-family:var(--display); font-weight:800; font-size:1.7rem; line-height:1.05; font-variant-numeric:tabular-nums}
+.hist{display:flex; flex-direction:column; gap:6px; font-size:.9rem; font-variant-numeric:tabular-nums}
+.hist div{display:flex; justify-content:space-between; gap:10px; border-bottom:1px solid var(--line); padding-bottom:6px}
+details.sci{border:2px solid var(--line); border-radius:16px; padding:14px 16px; background:var(--paper)}
+details.sci summary{cursor:pointer; font-family:var(--display); font-weight:800; font-size:1.15rem; list-style:none; display:flex; justify-content:space-between; align-items:center; gap:10px}
+details.sci summary::-webkit-details-marker{display:none}
+details.sci summary::after{content:"+"; color:var(--muted); font-family:var(--body); font-size:1.3rem}
+details.sci[open] summary::after{content:"–"}
+.sci-list{display:flex; flex-direction:column; gap:14px; margin-top:12px}
+.sci-item{display:flex; flex-direction:column; gap:6px; padding-top:12px; border-top:1px solid var(--line)}
+.sci-item .game{color:var(--coral); font-size:.78rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase}
+.sci-item .lim{color:var(--muted); font-size:.9rem}
+.sci-item .cite{font-size:.8rem; color:var(--muted)}
+.sci-item a{color:var(--plum)}
+@media (prefers-reduced-motion: reduce){ .goat.idle .gw,.gw.p-tree,.gw.p-mountain,.gw.p-wobble,.goat.asking::after{animation:none} }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Intro -->
+  <section class="screen" id="intro">
+    <div class="hero">
+      <svg width="104" height="82" viewBox="0 0 96 76" aria-hidden="true" id="heroGoat"></svg>
+      <div class="stack" style="gap:2px">
+        <div class="label">Stress Balls · Game 5</div>
+        <h1>Goat Yoga Instructor</h1>
+      </div>
+    </div>
+    <p>You teach yoga. Your students are goats. They want very specific poses and they have very hard heads.</p>
+    <div class="card">
+      <ul class="rules">
+        <li><b>1</b><span>A goat asks for a pose.</span></li>
+        <li><b>2</b><span>Press and hold that pose's button. Keep holding until the ring fills. Breathe slowly while you hold.</span></li>
+        <li><b>3</b><span>Hold it all the way and the goats copy you. Badly. The class gets calmer.</span></li>
+        <li><b>4</b><span>Pick the wrong pose, or take too long, and a goat headbutts you.</span></li>
+      </ul>
+    </div>
+    <p class="muted">Class runs 90 seconds. Fill the Zen meter for a bonus.</p>
+    <div class="stack">
+      <div class="label">Before you start, how do you feel?</div>
+      <div class="feel" id="feelPre"></div>
+    </div>
+    <div class="row">
+      <button class="btn" id="startBtn">Start class</button>
+      <button class="btn ghost" id="skipBtn">Skip the question</button>
+    </div>
+    <details class="sci"><summary>The science behind it</summary><div class="sci-list"></div></details>
+  </section>
+
+  <!-- Play -->
+  <section class="screen" id="play" hidden>
+    <div class="hud">
+      <div><span class="label">Score</span><span class="v" id="hScore">0</span></div>
+      <div class="zen"><span class="label">Class Zen</span><div class="zenbar"><i id="zenBar"></i></div></div>
+      <div class="r"><span class="label">Class ends</span><span class="v" id="hTime">90</span></div>
+    </div>
+    <div class="req" id="req">
+      <div class="ic" id="reqIc"></div>
+      <div><div class="who" id="reqWho">Waiting for the goats…</div><div class="what" id="reqWhat">&nbsp;</div><div class="wait"><i id="waitBar"></i></div></div>
+    </div>
+    <div class="scene" id="scene">
+      <div class="window"></div>
+      <div class="plant" style="left:14px"></div>
+      <div class="plant" style="right:14px"></div>
+      <svg class="ring" id="ring" viewBox="0 0 150 150" aria-hidden="true"><circle cx="75" cy="75" r="66" stroke="rgba(47,37,65,.15)"/><circle id="ringArc" cx="75" cy="75" r="66" stroke="#9d84d6" stroke-linecap="round" transform="rotate(-90 75 75)" stroke-dasharray="414.7" stroke-dashoffset="414.7"/></svg>
+      <div class="mat"></div>
+      <div class="inst" id="inst"></div>
+      <div class="caption" id="caption"></div>
+      <div class="overlay" id="overlay" hidden></div>
+    </div>
+    <p class="hint muted" id="hint">Press and hold the pose the goat asked for.</p>
+    <div class="poses" id="poses"></div>
+    <div class="row" style="justify-content:flex-end">
+      <button class="btn ghost" id="muteBtn" style="padding:6px 14px; font-size:.85rem" aria-pressed="false">Sound on</button>
+    </div>
+  </section>
+
+  <!-- Feel after -->
+  <section class="screen" id="after" hidden>
+    <div class="label">Class dismissed. Namaste.</div>
+    <h2>How do you feel now?</h2>
+    <div class="feel" id="feelPost"></div>
+    <div class="row"><button class="btn" id="seeBtn" disabled>See how class went</button></div>
+  </section>
+
+  <!-- Results -->
+  <section class="screen" id="results" hidden>
+    <div class="rank">
+      <span class="label" style="color:var(--plum)">Your title</span>
+      <h2 id="rRank">Goat Guru</h2>
+      <p id="rRankLine"></p>
+    </div>
+    <p id="rFeel"></p>
+    <div class="stats">
+      <div><span class="label">Score</span><span class="v" id="rScore">0</span></div>
+      <div><span class="label">Poses held</span><span class="v" id="rHeld">0</span></div>
+      <div><span class="label">Headbutts taken</span><span class="v" id="rButts">0</span></div>
+      <div><span class="label">Peak Zen moments</span><span class="v" id="rZen">0</span></div>
+      <div><span class="label">Let go too soon</span><span class="v" id="rEarly">0</span></div>
+      <div><span class="label">Best streak</span><span class="v" id="rStreak">0</span></div>
+    </div>
+    <div class="row"><button class="btn" id="againBtn">Teach another class</button></div>
+    <details class="sci"><summary>The science behind it</summary><div class="sci-list"></div></details>
+    <div class="stack" id="histWrap" hidden>
+      <div class="label">Recent classes on this phone</div>
+      <div class="hist" id="hist"></div>
+      <p class="muted" style="font-size:.8rem">Saved in this browser only. Clearing browsing data erases it.</p>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+const GAME_SECONDS = 90;
+const FEELS = ["Very tense","Tense","Okay","Calm","Very calm"];
+const POSES = {
+  tree:     {name:"Tree",          ask:["Teacher! Tree pose! Now!","Tree pose. I want to feel like a snack. I mean a tree."]},
+  warrior:  {name:"Warrior",       ask:["Warrior pose. I feel fierce today.","Warrior! I'm ready for battle. Or lunch."]},
+  down:     {name:"Downward Dog",  ask:["Downward Dog. Or as we call it, Downward Goat.","Downward Dog, but make it goat."]},
+  cobra:    {name:"Cobra",         ask:["I demand Cobra.","Cobra please. I like to hiss at the cat next door."]},
+  child:    {name:"Child's Pose",  ask:["Child's pose. I'm tired.","Child's pose. I ate too much hay."]},
+  mountain: {name:"Mountain",      ask:["Mountain! I like standing on things.","Mountain pose. I was born on one."]}
+};
+const POSE_IDS = Object.keys(POSES);
+const FIGURE = {
+  mountain:'<circle cx="30" cy="10" r="6"/><path d="M30 16 L30 42 M30 21 L22 38 M30 21 L38 38 M30 42 L25 64 M30 42 L35 64"/>',
+  tree:'<circle cx="30" cy="14" r="6"/><path d="M30 20 L30 44 M30 24 L25 6 L30 2 L35 6 L30 24 M30 44 L30 66 M30 44 L41 53 L31 56"/>',
+  warrior:'<circle cx="30" cy="10" r="6"/><path d="M30 16 L30 40 M30 22 L6 22 M30 22 L54 22 M30 40 L16 50 L12 64 M30 40 L50 64"/>',
+  down:'<circle cx="16" cy="52" r="6"/><path d="M10 64 L22 46 L32 26 M32 26 L50 64 M22 46 L14 64"/>',
+  cobra:'<circle cx="14" cy="36" r="6"/><path d="M18 42 L30 58 L56 62 M20 46 L18 62"/>',
+  child:'<circle cx="16" cy="54" r="6"/><path d="M22 56 L40 50 L44 60 L30 64 M40 50 L44 62 M22 56 L6 62"/>'
+};
+function figSVG(id, color, w){ return '<svg viewBox="0 0 60 70" aria-hidden="true"><g fill="'+(color||'#2f2541')+'" stroke="'+(color||'#2f2541')+'" stroke-width="'+(w||4.5)+'" stroke-linecap="round" stroke-linejoin="round"><g fill="none">'+FIGURE[id].replace(/<circle[^>]*\/>/,'')+'</g>'+FIGURE[id].match(/<circle[^>]*\/>/)[0]+'</g></svg>'; }
+function instSVG(id){
+  return '<svg viewBox="0 0 60 70" aria-hidden="true"><g stroke="#2f2541" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none">'+
+    FIGURE[id].replace(/<circle([^>]*)\/>/, '')+'</g><g stroke="#2f2541" stroke-width="3">'+FIGURE[id].match(/<circle[^>]*\/>/)[0].replace('/>',' fill="#f2c8a2"/>')+'</g>'+
+    '<g stroke="#ef7d6a" stroke-width="2.5" stroke-linecap="round" fill="none" opacity=".9">'+FIGURE[id].replace(/<circle([^>]*)\/>/, '')+'</g></svg>';
+}
+const GOATS = [
+  {name:"Gary",            fur:"#f7f4ee", spot:null},
+  {name:"Bleatrice",       fur:"#b98a5e", spot:"#7a5432"},
+  {name:"Sir Chews-a-lot", fur:"#f7f4ee", spot:"#2f2b33"}
+];
+function goatSVG(g){
+  return '<path d="M18 50 L18 68 M28 52 L28 68 M60 52 L60 68 M70 50 L70 68" stroke="#2f2541" stroke-width="5" stroke-linecap="round"/>'+
+    '<path d="M18 68 h4 M28 68 h4 M60 68 h4 M70 68 h4" stroke="#2f2541" stroke-width="5" stroke-linecap="round"/>'+
+    '<path d="M12 36 q-8 -6 -4 -12" stroke="#2f2541" stroke-width="3" fill="none" stroke-linecap="round"/>'+
+    '<ellipse cx="44" cy="42" rx="32" ry="16" fill="'+g.fur+'" stroke="#2f2541" stroke-width="3"/>'+
+    (g.spot ? '<path d="M30 32 q10 -6 18 2 q-4 12 -18 8 z" fill="'+g.spot+'"/>' : '')+
+    '<path d="M70 18 q4 -14 -6 -16 M78 18 q8 -12 0 -18" stroke="#8a7a62" stroke-width="4" fill="none" stroke-linecap="round"/>'+
+    '<path d="M64 22 l-10 -4 l6 8 z" fill="'+g.fur+'" stroke="#2f2541" stroke-width="2.5" stroke-linejoin="round"/>'+
+    '<ellipse cx="78" cy="28" rx="13" ry="11" fill="'+g.fur+'" stroke="#2f2541" stroke-width="3"/>'+
+    '<ellipse cx="82" cy="25" rx="5" ry="4" fill="#f5e27a" stroke="#2f2541" stroke-width="1.5"/><rect x="79.5" y="24" width="5" height="2.2" rx="1" fill="#1b1420"/>'+
+    '<ellipse cx="89" cy="32" rx="2" ry="1.5" fill="#2f2541"/><path d="M80 38 l3 10 l3 -9" fill="#cfc6b8" stroke="#2f2541" stroke-width="2" stroke-linejoin="round"/>';
+}
+const COPY_LINES = ["Nailed it. Way better than you, human.", "I'm upside down and STILL better at this than you.", "*eats the yoga mat* Delicious. Tastes like your sweat.", "Somebody take a picture for my Goatstagram.", "Look Gary, I'm a pretzel!", "I think I pulled a hoof. Worth it.", "Your pose looked like a confused flamingo.", "I'm basically a professional. You're basically a potato.", "Nobody saw me fall. Nobody.", "I can see my own butt from here!", "Human, your leggings are very tasty-looking.", "Ten out of ten. Would headbutt again.", "I'm doing it with four legs. You have two. Pathetic.", "My grandma does this pose better. She's a sheep.", "I just tooted. Yoga does that.", "That's not a pose, that's a cry for help. Love it."];
+const WRONG_LINES = ["Baaa-d teacher!", "That was for the hay you never gave me.", "I paid for this class in grass!", "Did you learn yoga from a YouTube video? At 2x speed?", "Wow. Even Gary knows that one. Gary eats rocks.", "Headbutt is also a yoga pose. It's called Goat Rage.", "You call yourself a teacher? I call you lunch.", "BONK. That's goat for 'try again, genius.'", "That pose looked like you sat on a cactus.", "Next time listen to the goat. The goat is always right."];
+const EARLY_LINES = ["We weren't done, noodle arms!", "*falls over dramatically* I'm dead. Tell my hay I loved it.", "Who let go? Was it you? It was you.", "Baaa! I fell on Gary. Gary is squishy.", "Ow. My dignity. And my butt.", "Your arms gave up faster than my diet.", "Wow. A toddler goat holds longer than that.", "Did your phone ring or are you just weak?"];
+const SLOW_LINES = ["Hellooo? Earth to human?", "I could have eaten a whole fence by now.", "Is the teacher buffering?", "I'll teach this myself. With my head.", "I grew a whole new beard waiting for you.", "Slow human. Snail-speed yoga. Snail-ga."];
+const IDLE_LINES = ["Is this mat edible? Asking for a friend.", "Gary keeps looking at me. Stop it, Gary.", "I've been doing goat yoga for years. I'm 2.", "My last teacher was a llama. Way better outfit.", "Bleatrice, stop chewing my tail.", "Psst. The teacher's shoelace looks delicious.", "Fun fact: I can't touch my toes. I have hooves.", "Human, you have something on your face. Oh wait, that's your face.", "I'm gonna stand on the teacher's back. Don't tell.", "Who smells like hay? Oh. It's me. I rolled in it.", "Is the teacher wearing pajamas? Bold.", "I ate a sock this morning. Ten out of ten.", "Gary, is that your stomach or a tractor?"];
+const HOLD_LINES = ["Ooh, look at the human wobble!", "Is it over yet? My legs are spaghetti.", "Your face is doing a weird thing right now.", "Don't look at me, I'll fall over!", "This is the longest I've stood still since birth.", "Human, you're shaking like a wet chihuahua.", "I'm sweating. Do goats sweat? Gary does. A lot."];
+const SCIENCE = [
+  {game:"Short casual games",
+   find:"A review of 28 studies found casual games like Tetris are a promising way to lower stress and anxiety. In several studies they beat sitting quietly or browsing the web. Fast action games tended to raise stress instead.",
+   lim:"The review called the evidence promising, not conclusive. Studies were small and mixed in quality.",
+   cite:"Pallavicini, Pepe & Mantovani (2021), JMIR Mental Health, 8(8), e28150",
+   url:"https://mental.jmir.org/2021/8/e28150"}
+];
+const $ = id => document.getElementById(id);
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const rand = (a,b) => a + Math.random()*(b-a);
+let S, raf = 0, audio = null, muted = false, goatEls = [];
+
+function reset(){
+  S = {pre:S?S.pre:null, post:null, phase:'intro', score:0, zen:30, held:0, butts:0, early:0, peaks:0, streak:0, best:0,
+       elapsed:0, last:0, paused:false, ask:null, holding:null, rounds:0, chatT:3};
+}
+reset();
+
+document.querySelectorAll('details.sci .sci-list').forEach(list=>{
+  list.innerHTML = '<p class="muted" style="font-size:.9rem">This game was built for fun. It has some support from general research on casual games, but this game itself has not been tested in a study. Holding each pose while you breathe slowly is a nice habit, but this game has not measured whether it helps. The goats are just for laughs.</p>' +
+    SCIENCE.map(s=>'<div class="sci-item"><span class="game">'+s.game+'</span><p>'+s.find+'</p><p class="lim">Limit: '+s.lim+'</p><p class="cite"><a href="'+s.url+'" target="_blank" rel="noopener">'+s.cite+'</a></p></div>').join('');
+});
+
+function show(id){ ['intro','play','after','results'].forEach(s => $(s).hidden = s!==id); window.scrollTo(0,0); }
+function buildFeel(el, onPick){
+  el.innerHTML = '';
+  FEELS.forEach((f,i)=>{
+    const b = document.createElement('button'); b.type='button'; b.setAttribute('aria-pressed','false');
+    b.innerHTML = '<span class="n">'+(i+1)+'</span><span>'+f+'</span>';
+    b.onclick = ()=>{ [...el.children].forEach(c=>c.setAttribute('aria-pressed','false')); b.setAttribute('aria-pressed','true'); onPick(i+1); };
+    el.appendChild(b);
+  });
+}
+buildFeel($('feelPre'), v=>{ S.pre = v; });
+
+/* ---------- sound ---------- */
+function initAudio(){ try{ audio = audio || new (window.AudioContext||window.webkitAudioContext)(); if(audio.state==='suspended') audio.resume(); }catch(e){ audio = null; } }
+function tone(f1, f2, dur, type, vol, delay){
+  if(!audio || muted) return;
+  const t = audio.currentTime + (delay||0), o = audio.createOscillator(), g = audio.createGain();
+  o.type = type; o.frequency.setValueAtTime(f1, t); o.frequency.exponentialRampToValueAtTime(f2, t+dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t+0.02); g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
+  o.connect(g); g.connect(audio.destination); o.start(t); o.stop(t+dur+0.02);
+}
+function bleat(delay){
+  if(!audio || muted) return;
+  const t = audio.currentTime + (delay||0), o = audio.createOscillator(), g = audio.createGain(), lfo = audio.createOscillator(), lg = audio.createGain();
+  o.type = 'sawtooth'; o.frequency.setValueAtTime(rand(420,560), t); o.frequency.linearRampToValueAtTime(rand(330,420), t+0.5);
+  lfo.frequency.value = 9; lg.gain.value = 25; lfo.connect(lg); lg.connect(o.frequency);
+  const lp = audio.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1600;
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.06, t+0.04); g.gain.exponentialRampToValueAtTime(0.0001, t+0.55);
+  o.connect(lp); lp.connect(g); g.connect(audio.destination); o.start(t); lfo.start(t); o.stop(t+0.6); lfo.stop(t+0.6);
+}
+const sfx = {
+  chime(){ tone(660, 660, 0.6, 'sine', 0.06); tone(990, 990, 0.8, 'sine', 0.04, 0.12); },
+  bonk(){ tone(180, 70, 0.2, 'square', 0.08); tone(1200, 1500, 0.08, 'triangle', 0.04, 0.12); tone(1500, 1800, 0.08, 'triangle', 0.04, 0.22); },
+  whoosh(){ tone(300, 900, 0.25, 'sawtooth', 0.02); },
+  oops(){ tone(500, 250, 0.3, 'triangle', 0.06); }
+};
+$('muteBtn').onclick = ()=>{ muted = !muted; $('muteBtn').textContent = muted ? 'Sound off' : 'Sound on'; $('muteBtn').setAttribute('aria-pressed', muted); };
+
+/* ---------- scene ---------- */
+const GOAT_POS = [
+  {left:'3%',  bottom:'26px', flip:false, scale:1},
+  {right:'3%', bottom:'26px', flip:true,  scale:1},
+  {left:'60%', bottom:'118px', flip:true, scale:.78}
+];
+function buildScene(){
+  const scene = $('scene');
+  goatEls.forEach(g=>g.el.remove()); goatEls = [];
+  GOATS.forEach((g,i)=>{
+    const p = GOAT_POS[i];
+    const el = document.createElement('div'); el.className = 'goat idle g'+i + (p.flip ? ' flipL' : '');
+    Object.entries(p).forEach(([k,v])=>{ if(['left','right','bottom'].includes(k)) el.style[k] = v; });
+    el.style.transform = 'scale('+p.scale+')';
+    el.innerHTML = '<div class="gw"><svg viewBox="0 0 96 76" aria-hidden="true">'+goatSVG(g)+'</svg></div><span class="say"></span>';
+    scene.appendChild(el);
+    goatEls.push({el, gw:el.querySelector('.gw'), say:el.querySelector('.say'), base:'scale('+p.scale+')', data:g});
+  });
+  $('inst').innerHTML = instSVG('mountain');
+}
+function buildPoses(){
+  const box = $('poses'); box.innerHTML = '';
+  POSE_IDS.forEach(id=>{
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'pose'; b.dataset.id = id;
+    b.innerHTML = figSVG(id)+'<span>'+POSES[id].name+'</span>';
+    b.addEventListener('pointerdown', e=>{ e.preventDefault(); try{ b.setPointerCapture(e.pointerId); }catch(_){} press(id, b); });
+    b.addEventListener('pointerup', ()=>release(b));
+    b.addEventListener('pointercancel', ()=>release(b));
+    b.addEventListener('lostpointercapture', ()=>release(b));
+    b.addEventListener('contextmenu', e=>e.preventDefault());
+    box.appendChild(b);
+  });
+}
+function goatSay(g, text, ms){ g.say.textContent = text; g.say.classList.add('show'); clearTimeout(g.sayT); g.sayT = setTimeout(()=>g.say.classList.remove('show'), ms||1400); }
+function caption(text, ms){ const c = $('caption'); c.textContent = text; c.classList.add('show'); clearTimeout(caption.t); caption.t = setTimeout(()=>c.classList.remove('show'), ms||1400); }
+function setZen(v){
+  S.zen = Math.max(0, Math.min(100, v));
+  $('zenBar').style.width = S.zen+'%';
+  if(S.zen >= 100){
+    S.peaks++; S.score += 50; hud(); sfx.chime();
+    caption('Namaste. Peak Zen! +50', 1800);
+    S.zen = 60; setTimeout(()=>{ $('zenBar').style.width = S.zen+'%'; }, 900);
+  }
+}
+function hud(){ $('hScore').textContent = S.score; }
+function poseGoats(cls){ goatEls.forEach(g=>{ g.gw.className = 'gw' + (cls ? ' '+cls : ''); g.el.classList.toggle('idle', !cls); }); }
+
+/* ---------- rounds ---------- */
+function nextAsk(){
+  if(S.phase!=='play') return;
+  poseGoats(''); $('inst').innerHTML = instSVG('mountain');
+  goatEls.forEach(g=>g.el.classList.remove('asking'));
+  const t = Math.min(1, S.elapsed/GAME_SECONDS);
+  let pose; do { pose = pick(POSE_IDS); } while(S.ask && pose===S.ask.pose && Math.random()<.8);
+  const gi = Math.floor(Math.random()*goatEls.length);
+  S.ask = {pose, goat:gi, wait: 6 - 2*t, left: 6 - 2*t, hold: 2 + 1.5*t, state:'asking'};
+  const g = goatEls[gi];
+  g.el.classList.add('asking');
+  $('reqIc').innerHTML = figSVG(pose);
+  $('reqWho').textContent = g.data.name+' wants:';
+  $('reqWhat').textContent = '“'+pick(POSES[pose].ask)+'”';
+  $('waitBar').style.width = '100%';
+  $('hint').textContent = 'Press and hold '+POSES[pose].name+'.';
+  bleat();
+}
+
+function press(id, btn){
+  if(S.phase!=='play' || S.paused || !S.ask || S.ask.state!=='asking') return;
+  initAudio();
+  if(id !== S.ask.pose){
+    btn.classList.add('bad'); setTimeout(()=>btn.classList.remove('bad'), 500);
+    headbutt('That\'s not '+POSES[id].name+'! It\'s '+POSES[S.ask.pose].name+'!');
+    return;
+  }
+  S.ask.state = 'holding'; S.holding = {btn, t:0};
+  btn.classList.add('held');
+  $('inst').innerHTML = instSVG(id);
+  $('ring').classList.add('on');
+  $('hint').textContent = 'Hold it… breathe in slowly… and out…';
+  poseGoats('p-wobble'); sfx.whoosh();
+}
+function release(btn){
+  if(!S.holding || S.holding.btn !== btn) return;
+  btn.classList.remove('held');
+  const h = S.holding; S.holding = null;
+  $('ring').classList.remove('on');
+  if(S.phase!=='play' || !S.ask || S.ask.state!=='holding') return;
+  // Let go too soon
+  S.ask.state = 'done'; S.early++; S.streak = 0;
+  setZen(S.zen - 6);
+  poseGoats('p-fall'); sfx.oops();
+  goatSay(goatEls[S.ask.goat], pick(EARLY_LINES), 1500);
+  caption('Too soon! The goats lost their balance.');
+  $('hint').textContent = 'Keep holding until the ring is full.';
+  setTimeout(nextAsk, 1700);
+}
+function completeHold(){
+  const h = S.holding; S.holding = null;
+  if(h) h.btn.classList.remove('held');
+  $('ring').classList.remove('on');
+  S.ask.state = 'done'; S.held++; S.streak++; S.best = Math.max(S.best, S.streak);
+  const pts = 10 + Math.min(10, (S.streak-1)*2);
+  S.score += pts; hud(); sfx.chime();
+  // Goats copy you, badly
+  const pose = S.ask.pose;
+  goatEls.forEach((g,i)=>{
+    const r = Math.random();
+    const cls = r < .55 ? 'p-'+pose : r < .78 ? 'p-flip' : 'p-fall';
+    g.gw.className = 'gw '+cls; g.el.classList.remove('idle','asking');
+  });
+  const talker = goatEls[Math.floor(Math.random()*goatEls.length)];
+  goatSay(talker, pick(COPY_LINES), 1700);
+  caption(S.streak >= 3 ? S.streak+' in a row! +'+pts : 'Pose held! +'+pts, 1300);
+  setZen(S.zen + 12);
+  setTimeout(nextAsk, 1900);
+}
+function headbutt(msg){
+  S.ask.state = 'done'; S.butts++; S.streak = 0;
+  setZen(S.zen - 14);
+  const g = goatEls[S.ask.goat];
+  g.el.classList.remove('asking','idle');
+  goatSay(g, msg, 1500);
+  // charge at the instructor
+  const sr = $('scene').getBoundingClientRect(), gr = g.el.getBoundingClientRect(), ir = $('inst').getBoundingClientRect();
+  const dx = (ir.left + ir.width/2) - (gr.left + gr.width/2);
+  const dy = (ir.bottom - 30) - (gr.bottom - 20);
+  g.el.classList.add('charge');
+  g.el.style.transition = 'transform .35s cubic-bezier(.6,0,.9,.5)';
+  setTimeout(()=>{ g.el.style.transform = g.base + ' translate('+(dx*0.72)+'px,'+(dy*0.72)+'px)'; }, 250);
+  setTimeout(()=>{
+    sfx.bonk(); bleat(0.05);
+    const inst = $('inst'); inst.classList.remove('bonk'); void inst.offsetWidth; inst.classList.add('bonk');
+    stars(ir.left - sr.left + ir.width/2, ir.top - sr.top + 20);
+    caption('OOF!', 900);
+  }, 600);
+  setTimeout(()=>{ g.el.style.transition = 'transform .6s ease-out'; g.el.style.transform = g.base; goatSay(g, pick(WRONG_LINES), 1500); }, 950);
+  setTimeout(()=>{ g.el.classList.remove('charge'); g.el.style.transition = ''; nextAsk(); }, 2500);
+}
+function stars(x, y){
+  const scene = $('scene');
+  for(let i=0;i<5;i++){
+    const s = document.createElement('span'); s.className = 'stars'; s.textContent = '✦';
+    s.style.left = (x + rand(-30,30))+'px'; s.style.top = (y + rand(-10,15))+'px'; s.style.animationDelay = (i*.06)+'s';
+    scene.appendChild(s); setTimeout(()=>s.remove(), 1300);
+  }
+}
+
+/* ---------- loop ---------- */
+function loop(ts){
+  if(S.phase!=='play') return;
+  const dt = S.last ? Math.min(.05, (ts - S.last)/1000) : 0; S.last = ts;
+  if(!S.paused){
+    S.elapsed += dt;
+    $('hTime').textContent = Math.max(0, Math.ceil(GAME_SECONDS - S.elapsed));
+    if(S.ask){
+      if(S.ask.state==='asking'){
+        // background chatter from the goats who aren't asking
+        S.chatT -= dt;
+        if(S.chatT <= 0){
+          S.chatT = rand(3.5, 6);
+          const others = goatEls.filter((g,i)=>i!==S.ask.goat && !g.say.classList.contains('show'));
+          if(others.length) goatSay(pick(others), pick(IDLE_LINES), 2200);
+        }
+        S.ask.left -= dt;
+        $('waitBar').style.width = Math.max(0, S.ask.left/S.ask.wait*100)+'%';
+        if(S.ask.left <= 0) headbutt(pick(SLOW_LINES));
+      } else if(S.ask.state==='holding' && S.holding){
+        S.holding.t += dt;
+        const p = Math.min(1, S.holding.t / S.ask.hold);
+        $('ringArc').setAttribute('stroke-dashoffset', (414.7*(1-p)).toFixed(1));
+        if(p >= .45 && !S.holding.talked){
+          S.holding.talked = true;
+          goatSay(goatEls[Math.floor(Math.random()*goatEls.length)], pick(HOLD_LINES), 1400);
+        }
+        if(p >= 1) completeHold();
+      }
+    }
+    if(S.elapsed >= GAME_SECONDS){ endGame(); return; }
+  }
+  raf = requestAnimationFrame(loop);
+}
+
+function start(){
+  const pre = S.pre; reset(); S.pre = pre;
+  initAudio(); show('play'); buildScene(); buildPoses(); hud(); setZen(30);
+  $('hTime').textContent = GAME_SECONDS;
+  S.phase = 'play';
+  const ov = $('overlay'); ov.innerHTML = '<h2>Class is starting.</h2><p>The goats have arrived. They are already chewing the mats.</p>'; ov.hidden = false;
+  setTimeout(()=>{ ov.hidden = true; S.last = 0; raf = requestAnimationFrame(loop); nextAsk(); }, 1500);
+}
+function endGame(){
+  S.phase = 'done'; cancelAnimationFrame(raf);
+  if(S.holding){ S.holding.btn.classList.remove('held'); S.holding = null; }
+  $('ring').classList.remove('on');
+  const ov = $('overlay'); ov.innerHTML = '<h2>Namaste!</h2><p>'+S.held+' poses held. '+S.butts+' headbutts taken.</p>'; ov.hidden = false;
+  setTimeout(()=>{
+    ov.hidden = true;
+    S.post = null; $('seeBtn').disabled = true;
+    buildFeel($('feelPost'), v=>{ S.post = v; $('seeBtn').disabled = false; });
+    show('after');
+  }, 2000);
+}
+function rankFor(){
+  if(S.held >= 10 && S.butts === 0) return ['Goat Guru', 'Not one headbutt. The goats now follow you everywhere. Literally.'];
+  if(S.butts > S.held) return ['Headbutt Magnet', 'Your forehead and the goats know each other very well now.'];
+  if(S.peaks >= 2) return ['Master of Goat Zen', 'You calmed a room full of goats. Twice. That\'s basically a miracle.'];
+  if(S.held >= 7) return ['Certified Goat Whisperer', 'The goats respect you. They still ate your mat.'];
+  if(S.early >= 3) return ['Impatient Yogi', 'Hold the pose a little longer next time. The goats were almost there.'];
+  return ['Yoga Apprentice', 'Every guru starts somewhere. Usually on the floor, after a headbutt.'];
+}
+function results(){
+  show('results');
+  const [rank, line] = rankFor();
+  $('rRank').textContent = rank; $('rRankLine').textContent = line;
+  $('rScore').textContent = S.score; $('rHeld').textContent = S.held; $('rButts').textContent = S.butts;
+  $('rZen').textContent = S.peaks; $('rEarly').textContent = S.early; $('rStreak').textContent = S.best;
+  let f = 'You said you feel '+FEELS[S.post-1].toLowerCase()+'.';
+  if(S.pre){
+    const d = S.post - S.pre;
+    f = 'You started at '+FEELS[S.pre-1].toLowerCase()+' and ended at '+FEELS[S.post-1].toLowerCase()+'. ';
+    f += d>0 ? 'That is '+d+' step'+(d>1?'s':'')+' better.' : d<0 ? 'A bit more tense than before. The goats may be to blame.' : 'No change this time.';
+  }
+  $('rFeel').textContent = f;
+  saveHist();
+}
+function saveHist(){
+  let h = [];
+  try{ h = JSON.parse(localStorage.getItem('goatyoga-hist')||'[]'); }catch(e){ h = []; }
+  h.unshift({d:new Date().toLocaleString([], {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'}),
+    s:S.score, h:S.held, pre:S.pre, post:S.post});
+  h = h.slice(0,5);
+  try{ localStorage.setItem('goatyoga-hist', JSON.stringify(h)); }catch(e){}
+  if(h.length > 1){
+    $('histWrap').hidden = false;
+    $('hist').innerHTML = h.map(x=>'<div><span>'+x.d+'</span><span>'+x.s+' pts · '+x.h+' poses · '+(x.pre?x.pre+'→':'')+x.post+'/5</span></div>').join('');
+  } else $('histWrap').hidden = true;
+}
+
+$('heroGoat').innerHTML = goatSVG(GOATS[1]);
+$('startBtn').onclick = start;
+$('skipBtn').onclick = ()=>{ S.pre = null; start(); };
+$('seeBtn').onclick = results;
+$('againBtn').onclick = ()=>{ S.pre = null; reset(); buildFeel($('feelPre'), v=>{ S.pre=v; }); show('intro'); };
+document.addEventListener('visibilitychange', ()=>{
+  if(S.phase!=='play') return;
+  if(document.hidden){ S.paused = true; }
+  else {
+    const ov = $('overlay'); ov.innerHTML = '<h2>Welcome back.</h2><p>The goats waited. Mostly by eating things.</p>'; ov.hidden = false;
+    setTimeout(()=>{ ov.hidden = true; S.paused = false; S.last = 0; }, 1300);
+  }
+});
+})();
+</script>
+</body>
+</html>
